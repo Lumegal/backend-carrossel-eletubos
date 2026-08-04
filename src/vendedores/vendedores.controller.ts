@@ -47,4 +47,12 @@ export class VendedoresController {
   ): Promise<Vendedor | null> {
     return this.vendedoresService.setAtivo(id, ativo);
   }
+
+  @Patch('desativar/:id')
+  async setDesativado(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('ativo') ativo: boolean,
+  ): Promise<Vendedor | null> {
+    return this.vendedoresService.setDesativado(id, ativo);
+  }
 }

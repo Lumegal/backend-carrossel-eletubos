@@ -1,1 +1,1 @@
-export class CreateVendedoreDto {}
+export class CreateVendedorDto {}

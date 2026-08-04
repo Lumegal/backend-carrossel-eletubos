@@ -45,6 +45,12 @@ export class VendedoresService {
     return this.findOne(id);
   }
 
+  async setDesativado(id: number, ativo: boolean): Promise<Vendedor | null> {
+    await this.vendedoresRepository.update(id, { ativo });
+
+    return this.findOne(id);
+  }
+
   async remove(id: number): Promise<void> {
     await this.vendedoresRepository.delete(id);
   }

@@ -9,6 +9,11 @@ export class Vendedor {
   @Column()
   nome: string;
 
+  @Column({
+    type: 'text',
+  })
+  foto: string;
+
   @Column({ default: true })
   ativo: boolean;
 
