@@ -18,5 +18,5 @@ export class Vendedor {
   ativo: boolean;
 
   @OneToMany(() => Pedido, (pedido) => pedido.vendedor)
-  pedidos!: Pedido[];
+  pedidos: Pedido[];
 }
