@@ -25,6 +25,11 @@ export class PedidosController {
     return this.pedidosService.findAll();
   }
 
+  @Get('mes-atual')
+  findMesAtual() {
+    return this.pedidosService.findMesAtual();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pedidosService.findOne(+id);

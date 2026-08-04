@@ -46,14 +46,29 @@ export class PedidosService {
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} pedido`;
+    return `findone`;
+  }
+
+  async findMesAtual(): Promise<Pedido[]> {
+    const hoje = new Date();
+
+    const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
+
+    return this.pedidosRepository
+      .createQueryBuilder('pedido')
+      .leftJoinAndSelect('pedido.vendedor', 'vendedor')
+      .where('pedido.data >= :primeiroDia', { primeiroDia })
+      .andWhere('pedido.data < :ultimoDia', { ultimoDia })
+      .orderBy('pedido.data', 'ASC')
+      .getMany();
   }
 
   update(id: number, updatePedidoDto: UpdatePedidoDto) {
-    return `This action updates a #${id} pedido`;
+    return `update`;
   }
 
   remove(id: number) {
-    return `This action removes a #${id} pedido`;
+    return `remove`;
   }
 }
