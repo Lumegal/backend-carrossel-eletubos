@@ -74,8 +74,41 @@ export class PedidosService {
       .getMany();
   }
 
-  update(id: number, updatePedidoDto: UpdatePedidoDto) {
-    return `update`;
+  async update(id: number, updatePedidoDto: UpdatePedidoDto) {
+    const pedido = await this.pedidosRepository.findOne({
+      where: { id },
+      relations: {
+        vendedor: true,
+      },
+    });
+
+    if (!pedido) {
+      throw new NotFoundException('Pedido não encontrado.');
+    }
+
+    const vendedor = await this.vendedoresRepository.findOneBy({
+      id: updatePedidoDto.vendedorId,
+    });
+
+    if (!vendedor) {
+      throw new NotFoundException('Vendedor não encontrado.');
+    }
+
+    const pedidoComMesmoNumero = await this.pedidosRepository.findOneBy({
+      numero: updatePedidoDto.numero,
+    });
+
+    if (pedidoComMesmoNumero && pedidoComMesmoNumero.id !== id) {
+      throw new BadRequestException('Já existe um pedido com esse número.');
+    }
+
+    pedido.numero = updatePedidoDto.numero;
+    pedido.data = new Date(updatePedidoDto.data);
+    pedido.pesoKg = updatePedidoDto.pesoKg;
+    pedido.valor = updatePedidoDto.valor;
+    pedido.vendedor = vendedor;
+
+    return await this.pedidosRepository.save(pedido);
   }
 
   async remove(id: number): Promise<DeleteResult> {
