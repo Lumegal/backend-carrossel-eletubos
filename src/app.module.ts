@@ -5,6 +5,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { MetasModule } from './metas/metas.module';
 import { VendedoresModule } from './vendedores/vendedores.module';
 import { PedidosModule } from './pedidos/pedidos.module';
+import { EventsModule } from './websocket/events.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { PedidosModule } from './pedidos/pedidos.module';
     VendedoresModule,
     DashboardModule,
     PedidosModule,
+    EventsModule,
   ],
 })
 export class AppModule {}

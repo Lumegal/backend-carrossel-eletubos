@@ -2,16 +2,19 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Vendedor } from './entities/vendedor.entity';
+import { EventsGateway } from 'src/websocket/events.gateway';
 
 @Injectable()
 export class VendedoresService {
   constructor(
     @InjectRepository(Vendedor)
     private readonly vendedoresRepository: Repository<Vendedor>,
+
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   async findAll(): Promise<Vendedor[]> {
-    return this.vendedoresRepository.find({
+    return await this.vendedoresRepository.find({
       order: {
         nome: 'ASC',
       },
@@ -19,7 +22,7 @@ export class VendedoresService {
   }
 
   async findOne(id: number): Promise<Vendedor | null> {
-    return this.vendedoresRepository.findOne({
+    return await this.vendedoresRepository.findOne({
       where: { id },
     });
   }
@@ -27,7 +30,11 @@ export class VendedoresService {
   async create(vendedor: Partial<Vendedor>): Promise<Vendedor> {
     const novoVendedor = this.vendedoresRepository.create(vendedor);
 
-    return this.vendedoresRepository.save(novoVendedor);
+    this.eventsGateway.emit('vendedorCriado', vendedor);
+
+    const resultado = await this.vendedoresRepository.save(novoVendedor);
+
+    return resultado;
   }
 
   async update(
@@ -36,22 +43,32 @@ export class VendedoresService {
   ): Promise<Vendedor | null> {
     await this.vendedoresRepository.update(id, vendedor);
 
-    return this.findOne(id);
+    this.eventsGateway.emit('vendedorEditado', vendedor);
+
+    return await this.findOne(id);
   }
 
   async setAtivo(id: number, ativo: boolean): Promise<Vendedor | null> {
-    await this.vendedoresRepository.update(id, { ativo });
+    const vendedor = await this.vendedoresRepository.update(id, { ativo });
 
-    return this.findOne(id);
+    this.eventsGateway.emit('vendedorAtivado', vendedor);
+
+    return await this.findOne(id);
   }
 
   async setDesativado(id: number, ativo: boolean): Promise<Vendedor | null> {
-    await this.vendedoresRepository.update(id, { ativo });
+    const vendedor = await this.vendedoresRepository.update(id, { ativo });
+
+    this.eventsGateway.emit('vendedorDesativado', vendedor);
 
     return this.findOne(id);
   }
 
   async remove(id: number): Promise<void> {
-    await this.vendedoresRepository.delete(id);
+    const resultado = this.vendedoresRepository.delete(id);
+
+    this.eventsGateway.emit('vendedorExcluido', resultado);
+
+    await resultado;
   }
 }

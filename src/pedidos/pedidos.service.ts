@@ -9,6 +9,7 @@ import { Pedido } from './entities/pedido.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, QueryFailedError, Repository } from 'typeorm';
 import { Vendedor } from 'src/vendedores/entities/vendedor.entity';
+import { EventsGateway } from 'src/websocket/events.gateway';
 
 @Injectable()
 export class PedidosService {
@@ -18,6 +19,8 @@ export class PedidosService {
 
     @InjectRepository(Vendedor)
     private readonly vendedoresRepository: Repository<Vendedor>,
+
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   async create(createPedidoDto: CreatePedidoDto) {
@@ -38,7 +41,11 @@ export class PedidosService {
         vendedor,
       });
 
-      return await this.pedidosRepository.save(pedido);
+      const resultado = await this.pedidosRepository.save(pedido);
+
+      this.eventsGateway.emit('pedidoCriado', pedido);
+
+      return resultado;
     } catch (error) {
       if (
         error instanceof QueryFailedError &&
@@ -52,7 +59,7 @@ export class PedidosService {
   }
 
   async findAll(): Promise<Pedido[]> {
-    return this.pedidosRepository.find();
+    return await this.pedidosRepository.find();
   }
 
   findOne(id: number) {
@@ -65,7 +72,7 @@ export class PedidosService {
     const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
 
-    return this.pedidosRepository
+    return await this.pedidosRepository
       .createQueryBuilder('pedido')
       .leftJoinAndSelect('pedido.vendedor', 'vendedor')
       .where('pedido.data >= :primeiroDia', { primeiroDia })
@@ -108,10 +115,18 @@ export class PedidosService {
     pedido.valor = updatePedidoDto.valor;
     pedido.vendedor = vendedor;
 
-    return await this.pedidosRepository.save(pedido);
+    const resultado = await this.pedidosRepository.save(pedido);
+
+    this.eventsGateway.emit('pedidoEditado', pedido);
+
+    return resultado;
   }
 
   async remove(id: number): Promise<DeleteResult> {
-    return await this.pedidosRepository.delete(id);
+    const resultado = await this.pedidosRepository.delete(id);
+
+    this.eventsGateway.emit('pedidoExcluido', id);
+
+    return resultado;
   }
 }

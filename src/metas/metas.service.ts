@@ -2,12 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Meta } from './entities/meta.entity';
+import { EventsGateway } from 'src/websocket/events.gateway';
 
 @Injectable()
 export class MetasService {
   constructor(
     @InjectRepository(Meta)
     private readonly metasRepository: Repository<Meta>,
+
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   async get(): Promise<Meta> {
@@ -28,7 +31,9 @@ export class MetasService {
   }
 
   async update(dados: Partial<Meta>): Promise<Meta> {
-    await this.metasRepository.update(1, dados);
+    const metas = await this.metasRepository.update(1, dados);
+
+    this.eventsGateway.emit('metasAtualizadas', metas);
 
     return this.get();
   }
